@@ -142,10 +142,17 @@ jobs:
           echo "Cloning AnyKernel3 and other dependencies..."
 
           ANYKERNEL_BRANCH="gki-2.0"
-          
+
+          # Clone repositories
           git clone https://github.com/WildPlusKernel/AnyKernel3.git -b "$ANYKERNEL_BRANCH"
           git clone https://github.com/WildPlusKernel/kernel_patches.git
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
+    
+          # Clone SUSFS and checkout specific commit
+          git clone https://gitlab.com/simonpunk/susfs4ksu.git
+          cd susfs4ksu
+          git checkout 09fec8aa1f39807788c526dd84429f6d92b805ae
+          cd ..
 
       - name: 验证 SUSFS 版本
         run: |
