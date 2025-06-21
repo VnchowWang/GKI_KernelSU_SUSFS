@@ -243,24 +243,30 @@ jobs:
       - name: 为 KernelSU 变体安装 SUSFS 补丁
         run: |
           cd "$CONFIG"
-
+    
+          # 不再尝试检出标签，直接使用已下载的特定版本
+          echo "使用已下载的 SUSFS 1.5.7 (提交: $SUSFS_COMMIT)"
+    
           # 复制 SUSFS 1.5.7 补丁
           cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch ./common/
           cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
           cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
 
+          # 根据 KernelSU 变体应用特定补丁
           if [ "${{ inputs.kernelsu_variant }}" == "Official" ]; then
             cd ./KernelSU
             cp ../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./
             patch -p1 --forward --fuzz=3 < 10_enable_susfs_for_ksu.patch
           elif [ "${{ inputs.kernelsu_variant }}" == "Next" ]; then
             cd ./KernelSU-Next
+            # 不再需要额外的补丁操作
           elif [ "${{ inputs.kernelsu_variant }}" == "MKSU" ]; then
             cd ./KernelSU
             cp ../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./
             patch -p1 --forward --fuzz=3 < 10_enable_susfs_for_ksu.patch || true
           elif [ "${{ inputs.kernelsu_variant }}" == "SukiSU" ]; then
             cd ./KernelSU
+            # 不再需要额外的补丁操作
           fi
 
           cd ../common
