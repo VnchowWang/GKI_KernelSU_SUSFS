@@ -75,7 +75,7 @@ jobs:
       - name: 安装构建工具
         run: |
           sudo apt update
-          sudo apt install -y ccache python3 git curl jq unzip bc build-essential flex bison libssl-dev
+          sudo apt install -y ccache python3 git curl jq unzip bc build-essential flex bison libssl-dev wget
 
       - name: 配置 ccache
         run: |
@@ -129,17 +129,19 @@ jobs:
           chmod a+rx ./git-repo/repo
           echo "REPO=$GITHUB_WORKSPACE/./git-repo/repo" >> $GITHUB_ENV
 
+      - name: 下载 SUSFS 1.5.7
+        run: |
+          # 直接从 GitLab 下载指定提交的 ZIP 文件
+          wget -q "https://gitlab.com/simonpunk/susfs4ksu/-/archive/$SUSFS_COMMIT/susfs4ksu-$SUSFS_COMMIT.zip"
+          unzip -q "susfs4ksu-$SUSFS_COMMIT.zip"
+          mv "susfs4ksu-$SUSFS_COMMIT" susfs4ksu
+          echo "SUSFS 1.5.7 已下载到: $(pwd)/susfs4ksu"
+
       - name: 克隆 AnyKernel3 和其他依赖项
         run: |
           echo "Cloning AnyKernel3 and other dependencies..."
 
           ANYKERNEL_BRANCH="gki-2.0"
-          
-          # 使用提交哈希克隆 SUSFS 1.5.7
-          git clone https://gitlab.com/simonpunk/susfs4ksu.git
-          cd susfs4ksu
-          git checkout $SUSFS_COMMIT
-          cd ..
           
           git clone https://github.com/WildPlusKernel/AnyKernel3.git -b "$ANYKERNEL_BRANCH"
           git clone https://github.com/WildPlusKernel/kernel_patches.git
@@ -153,8 +155,11 @@ jobs:
           echo "预期提交: $SUSFS_COMMIT"
           
           # 检查是否是我们期望的提交
-          if [ "$(git rev-parse HEAD)" != "$SUSFS_COMMIT" ]; then
+          CURRENT_COMMIT=$(git rev-parse HEAD)
+          if [ "$CURRENT_COMMIT" != "$SUSFS_COMMIT" ]; then
             echo "错误：SUSFS 提交哈希不匹配！"
+            echo "实际提交: $CURRENT_COMMIT"
+            echo "预期提交: $SUSFS_COMMIT"
             exit 1
           fi
           cd ..
@@ -177,7 +182,7 @@ jobs:
           
           if grep -q deprecated <<< $REMOTE_BRANCH; then
             echo "Found deprecated branch: $FORMATTED_BRANCH"
-            sed -i "s/\"${FORMatted_BRANCH}\"/\"deprecated\/${FORMATTED_BRANCH}\"/g" $DEFAULT_MANIFEST_PATH
+            sed -i "s/\"${FORMATTED_BRANCH}\"/\"deprecated\/${FORMATTED_BRANCH}\"/g" $DEFAULT_MANIFEST_PATH
           fi
           
           $REPO --version
