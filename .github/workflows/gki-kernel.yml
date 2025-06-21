@@ -258,12 +258,19 @@ jobs:
             curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash $BRANCH
           fi
 
+
       - name: 为 KernelSU 变体安装 SUSFS 补丁
         run: |
           echo "更改为配置目录: $CONFIG..."
           cd "$CONFIG"
 
+          # 回退到 SUSFS 1.5.7 版本
+          cd ../susfs4ksu
+          git checkout v1.5.7  # 或特定提交ID
+          cd ..
+    
           echo "Applying SUSFS patches..."
+          # 原有补丁复制命令保持不变...
 
           # Copy SUSFS patches
           cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch ./common/
